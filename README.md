@@ -32,10 +32,10 @@ Python 3.10–3.14 recommended
 
 Install all dependencies:
 
-```bash
+bash
 pip install -r requirements.txt
 
-How to Run the Project
+## How to Run the Project
 Recommended Way: Using the Notebook (Interactive & Visual)
 
 Open VS Code → File → Open Folder → select the project root folder
@@ -45,7 +45,7 @@ Make sure you have selected the correct Python interpreter:
 Ctrl + Shift + P → "Python: Select Interpreter"
 Choose your global Python 3.14 or the virtual environment you created
 
-Run the cells in order (top to bottom):
+## Run the cells in order (top to bottom):
 Cell 1: Imports + path fix
 Cell 2: Load & preprocess lyrics
 Cell 3: Train VAE & extract latent features
@@ -60,17 +60,19 @@ latent_visualization/vae_latent_clusters.png — 2D scatter plot
 
 What Each File Does
 
-src/dataset.py
+## src/dataset.py
 Loads all .txt lyric files and converts them into TF-IDF feature matrix (bag-of-words style)
-src/vae.py
+
+## src/vae.py
 Defines Variational Autoencoder model + training loop
 Returns trained model that can encode lyrics → latent vectors (mu)
-src/clustering.py
+
+## src/clustering.py
 Contains two clustering functions:
 perform_clustering: K-Means on VAE latent features
 pca_baseline: PCA dimensionality reduction + K-Means (for comparison)
 
-src/evaluation.py
+## src/evaluation.py
 Implements 6 clustering metrics:
 Silhouette Score
 Calinski-Harabasz Index
@@ -80,7 +82,8 @@ Normalized Mutual Information (NMI)
 Cluster Purity
 (First three are unsupervised, last three need ground truth labels)
 
-notebooks/exploratory.ipynb
+## notebooks/exploratory.ipynb
+
 Main interactive workflow:
 Loads data
 Trains VAE
