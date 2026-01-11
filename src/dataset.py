@@ -2,6 +2,7 @@ import numpy as np
 import re
 from collections import Counter
 import os
+import librosa
 
 def load_data(data_dir='data/lyrics'):
     """
@@ -68,3 +69,41 @@ def compute_tfidf(texts, max_vocab=500):
     # For now we'll just return what we have (you'll pass artists separately)
     return features.astype(np.float32), vocab
 
+def extract_mfcc(audio_path, n_mfcc=13, max_len=100):
+    """Extract fixed-length MFCC from audio file"""
+    try:
+        y, sr = librosa.load(audio_path, sr=None)
+        mfcc = librosa.feature.mfcc(y=y, sr=sr, n_mfcc=n_mfcc)
+        # Pad or truncate to fixed length
+        if mfcc.shape[1] > max_len:
+            mfcc = mfcc[:, :max_len]
+        else:
+            pad_width = max_len - mfcc.shape[1]
+            mfcc = np.pad(mfcc, ((0,0), (0, pad_width)), mode='constant')
+        return mfcc.flatten()  # → vector of size n_mfcc * max_len
+    except Exception as e:
+        print(f"Error processing {audio_path}: {e}")
+        return np.zeros(n_mfcc * max_len)
+
+
+def load_audio_features(audio_dir='data/audio', n_mfcc=13, max_len=100):
+    files = [f for f in os.listdir(audio_dir) if f.endswith(('.mp3', '.wav'))]
+    features = []
+    names = []
+    for f in files:
+        path = os.path.join(audio_dir, f)
+        mfcc_vec = extract_mfcc(path, n_mfcc, max_len)
+        features.append(mfcc_vec)
+        names.append(f.rsplit('.', 1)[0])  # remove extension
+    return np.array(features), names
+
+def get_genre_embeddings(genres, num_genres=5):
+    """One-hot genre embeddings (for multi-modal / CVAE)"""
+    from sklearn.preprocessing import OneHotEncoder
+    enc = OneHotEncoder(sparse_output=False, handle_unknown='ignore')
+    return enc.fit_transform(np.array(genres).reshape(-1, 1))
+
+# In hybrid: add genre
+def create_multi_modal_features(lyrics_features, audio_features, genres):
+    genre_emb = get_genre_embeddings(genres)
+    return np.hstack([lyrics_features, audio_features, genre_emb])

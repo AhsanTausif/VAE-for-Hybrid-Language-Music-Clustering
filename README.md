@@ -4,8 +4,6 @@ Unsupervised clustering of song lyrics using Variational Autoencoders (VAE) to e
 
 **Goal**: Group similar lyrical styles (e.g., rap, pop, ballad, poetry) using text features from lyrics of various artists.
 
-Current status (Jan 2026): Basic VAE + TF-IDF features + clustering + evaluation metrics implemented (easy task level).
-
 ## Project Structure
 
 VAE-for-Hybrid-Language-Music-Clustering/
