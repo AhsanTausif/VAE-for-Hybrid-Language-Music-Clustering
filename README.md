@@ -1,92 +1,154 @@
 # VAE for Hybrid-Language Music Lyrics Clustering
 
-Unsupervised clustering of song lyrics using Variational Autoencoders (VAE) to extract latent representations, followed by K-Means clustering and comparison with PCA baseline.
+**Can a model discover musical styles from words alone, with no labels and no audio?**
 
-**Goal**: Group similar lyrical styles (e.g., rap, pop, ballad, poetry) using text features from lyrics of various artists.
+This project learns a compact "style space" for song lyrics with a **Variational Autoencoder (VAE)**, then groups songs into clusters such as rap, pop, ballad or poetic writing. It compares the VAE against a classic **PCA** baseline using six clustering metrics, so every claim about "better clusters" is backed by numbers.
 
-## Project Structure
+![Python](https://img.shields.io/badge/Python-3.10%E2%80%933.14-3776AB?style=flat&logo=python&logoColor=white)
+![Unsupervised Learning](https://img.shields.io/badge/Unsupervised-Learning-6A1B9A?style=flat)
+![VAE](https://img.shields.io/badge/Model-VAE-FF6F00?style=flat)
 
+---
+
+## Why this matters
+
+Music platforms organize songs by genre tags that are often missing, inconsistent or too coarse, especially for **hybrid-language and code-mixed lyrics** (songs that mix languages within a verse). Lyrics carry a lot of style signal on their own: vocabulary, repetition, rhyme density, sentence length, tone.
+
+The vision is a **label-free way to map lyrical style** that:
+- works when genre labels don't exist,
+- can group songs across languages by *how* they are written, not only by *which* language,
+- gives a latent space you can explore, visualize and build recommendations on.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A["Lyrics<br/>(.txt per artist)"] --> B["Preprocess<br/>clean + TF-IDF"]
+    B --> C["VAE encoder<br/>lyrics → latent μ"]
+    B --> D["PCA<br/>(baseline)"]
+    C --> E["K-Means"]
+    D --> F["K-Means"]
+    E --> G["Evaluate<br/>6 metrics"]
+    F --> G
+    G --> H["Results table +<br/>2D latent plots"]
+```
+
+1. **Features:** each song becomes a TF-IDF vector (which words matter, weighted by how distinctive they are).
+2. **Representation learning:** the VAE compresses that vector into a small latent vector. The encoder's mean (μ) is used as the song's "style fingerprint".
+3. **Clustering:** K-Means groups the fingerprints.
+4. **Baseline:** the same pipeline with PCA instead of the VAE, to check that the VAE actually adds value.
+5. **Evaluation:** internal metrics (no labels needed), plus external metrics when artist or genre labels are available.
+
+## Results
+
+> Run the notebook to generate `results/clustering_metrics.csv`, then copy the numbers here.
+
+| Method | Silhouette ↑ | Calinski-Harabasz ↑ | Davies-Bouldin ↓ | ARI ↑ | NMI ↑ | Purity ↑ |
+|---|---|---|---|---|---|---|
+| PCA + K-Means | | | | | | |
+| VAE + K-Means | | | | | | |
+
+![Latent space](results/latent_visualization/vae_latent_clusters.png)
+
+**Key findings:** *(2-3 sentences: did the VAE beat PCA, on which metrics, and what do the clusters look like?)*
+
+## Quick start
+
+```bash
+git clone https://github.com/<owner>/VAE-for-Hybrid-Language-Music-Clustering.git
+cd VAE-for-Hybrid-Language-Music-Clustering
+python -m venv .venv
+.venv\Scripts\activate          # macOS/Linux: source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+Add lyrics as one `.txt` file per artist in `data/lyrics/` (see [Data](#data)).
+
+### Run the notebook (recommended)
+1. Open the project folder in VS Code and open `notebooks/exploratory.ipynb`.
+2. Select the interpreter: `Ctrl + Shift + P` → **Python: Select Interpreter** → your `.venv`.
+3. Run the cells top to bottom:
+
+| Cell | What it does |
+|---|---|
+| 1 | Imports and path setup |
+| 2 | Load and preprocess lyrics (TF-IDF) |
+| 3 | Train the VAE and extract latent features |
+| 4 | Cluster with K-Means (VAE and PCA) |
+| 5 | Unsupervised metrics |
+| 6 | Supervised metrics (optional, needs labels) |
+| 7 | Visualize and save results |
+
+Outputs are written to `results/`:
+- `clustering_metrics.csv`: comparison table
+- `latent_visualization/vae_latent_clusters.png`: 2D scatter plot of the latent space
+
+## Project structure
+
+```
 VAE-for-Hybrid-Language-Music-Clustering/
 ├── data/
-│   └── lyrics/                  # (optional) place your .txt files here
-│       ├── adele.txt
-│       ├── amy-winehouse.txt
-│       └── ... (all artist lyrics files)
+│   └── lyrics/                  # one .txt per artist (not committed, see Data)
 ├── notebooks/
-│   └── exploratory.ipynb        # Main interactive notebook – run your experiments here
+│   └── exploratory.ipynb        # main interactive workflow
 ├── src/
-│   ├── dataset.py               # Data loading & TF-IDF feature extraction
-│   ├── vae.py                   # VAE model definition & training
-│   ├── clustering.py            # K-Means clustering + PCA baseline
-│   └── evaluation.py            # All clustering evaluation metrics
+│   ├── dataset.py               # loading + TF-IDF feature extraction
+│   ├── vae.py                   # VAE model + training loop
+│   ├── clustering.py            # K-Means on latents + PCA baseline
+│   └── evaluation.py            # 6 clustering metrics
 ├── results/
-│   ├── latent_visualization/    # Saved plots (e.g. latent_2d.png)
-│   └── clustering_metrics.csv   # Table of evaluation scores
-├── README.md                    # This file
-└── requirements.txt             # List of Python dependencies
+│   ├── latent_visualization/    # saved plots
+│   └── clustering_metrics.csv   # metric comparison
+├── requirements.txt
+└── README.md
+```
 
+| Module | Responsibility |
+|---|---|
+| `src/dataset.py` | Reads every `.txt` lyric file and builds the TF-IDF matrix |
+| `src/vae.py` | VAE definition and training; encodes lyrics into latent vectors (μ) |
+| `src/clustering.py` | `perform_clustering` (K-Means on VAE latents) and `pca_baseline` (PCA + K-Means) |
+| `src/evaluation.py` | All clustering metrics below |
 
-## Requirements
+## Evaluation metrics
 
-Python 3.10–3.14 recommended
+| Metric | Needs labels? | What it tells you | Better |
+|---|---|---|---|
+| Silhouette Score | No | How well each song fits its own cluster vs the nearest other one | Higher |
+| Calinski-Harabasz Index | No | Ratio of between-cluster to within-cluster spread | Higher |
+| Davies-Bouldin Index | No | Average similarity between each cluster and its closest neighbor | Lower |
+| Adjusted Rand Index (ARI) | Yes | Agreement with true labels, corrected for chance | Higher |
+| Normalized Mutual Information (NMI) | Yes | Shared information between clusters and true labels | Higher |
+| Cluster Purity | Yes | Share of songs in each cluster that belong to its majority label | Higher |
 
-Install all dependencies:
+## Data
 
-bash
-pip install -r requirements.txt
+Lyrics are copyrighted, so lyric files are **not included** in this repository. Use your own collection, or a public lyrics dataset whose license allows research use, and place one `.txt` file per artist in `data/lyrics/`.
 
-## How to Run the Project
-Recommended Way: Using the Notebook (Interactive & Visual)
+## Limitations
 
-Open VS Code → File → Open Folder → select the project root folder
-(the one containing notebooks/, src/, etc.)
-Open notebooks/exploratory.ipynb
-Make sure you have selected the correct Python interpreter:
-Ctrl + Shift + P → "Python: Select Interpreter"
-Choose your global Python 3.14 or the virtual environment you created
+- TF-IDF ignores word order and meaning, so two songs with similar themes but different words can land far apart.
+- TF-IDF vocabularies are language-specific; code-mixed lyrics split their vocabulary across languages.
+- K-Means assumes round, similar-sized clusters and needs the number of clusters chosen up front.
+- Grouping by artist file can make the model learn artist identity rather than style.
 
-## Run the cells in order (top to bottom):
-Cell 1: Imports + path fix
-Cell 2: Load & preprocess lyrics
-Cell 3: Train VAE & extract latent features
-Cell 4: Perform clustering
-Cell 5: Unsupervised metrics
-Cell 6: (optional) Supervised metrics if you have labels
-Cell 7: Visualization & save results
+## Roadmap
 
-Results will be saved automatically in results/ folder:
-clustering_metrics.csv — comparison table
-latent_visualization/vae_latent_clusters.png — 2D scatter plot
+- [ ] **Multilingual embeddings** (e.g. multilingual sentence-transformer models) instead of TF-IDF, so meaning is shared across languages
+- [ ] **β-VAE** for a more disentangled, interpretable latent space
+- [ ] Choose the number of clusters automatically (elbow / silhouette sweep), and try **HDBSCAN**
+- [ ] **UMAP** visualization of the latent space
+- [ ] Song-level (not artist-level) evaluation with genre labels
+- [ ] Add audio features for a joint lyrics + audio model
+- [ ] Simple demo: paste lyrics → see the nearest cluster and similar songs
 
-What Each File Does
+## Authors
 
-## src/dataset.py
-Loads all .txt lyric files and converts them into TF-IDF feature matrix (bag-of-words style)
+- **<Co-author name>** ([@their-username](https://github.com/their-username))
+- **Noshin Tabassum Arthi** ([@your-username](https://github.com/your-username))
 
-## src/vae.py
-Defines Variational Autoencoder model + training loop
-Returns trained model that can encode lyrics → latent vectors (mu)
+*(Optional: one line each on who built what, e.g. "VAE model and training" / "evaluation and visualization".)*
 
-## src/clustering.py
-Contains two clustering functions:
-perform_clustering: K-Means on VAE latent features
-pca_baseline: PCA dimensionality reduction + K-Means (for comparison)
+## License
 
-## src/evaluation.py
-Implements 6 clustering metrics:
-Silhouette Score
-Calinski-Harabasz Index
-Davies-Bouldin Index
-Adjusted Rand Index (ARI)
-Normalized Mutual Information (NMI)
-Cluster Purity
-(First three are unsupervised, last three need ground truth labels)
-
-## notebooks/exploratory.ipynb
-
-Main interactive workflow:
-Loads data
-Trains VAE
-Clusters
-Evaluates
-Visualizes latent space in 2D
+*(Add a license, e.g. MIT, after agreeing with all authors.)*
