@@ -144,11 +144,6 @@ Lyrics are copyrighted, so lyric files are **not included** in this repository. 
 
 ## Authors
 
-- **<Co-author name>** ([@their-username](https://github.com/their-username))
-- **Noshin Tabassum Arthi** ([@your-username](https://github.com/your-username))
+- **Samin Ahsan Tausif** ([@AhsanTausif](https://github.com/AhsanTausif))
+- **Noshin Tabassum Arthi** ([@your-username](https://github.com/Noshin-Arthi))
 
-*(Optional: one line each on who built what, e.g. "VAE model and training" / "evaluation and visualization".)*
-
-## License
-
-*(Add a license, e.g. MIT, after agreeing with all authors.)*
