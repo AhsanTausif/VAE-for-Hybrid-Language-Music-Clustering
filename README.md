@@ -145,5 +145,5 @@ Lyrics are copyrighted, so lyric files are **not included** in this repository. 
 ## Authors
 
 - **Samin Ahsan Tausif** ([@AhsanTausif](https://github.com/AhsanTausif))
-- **Noshin Tabassum Arthi** ([@your-username](https://github.com/Noshin-Arthi))
+- **Noshin Tabassum Arthi** ([@Noshin-Arthi](https://github.com/Noshin-Arthi))
 
